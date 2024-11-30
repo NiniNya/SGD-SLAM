@@ -192,7 +192,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpMapDrawer = new MapDrawer(mpAtlas, strSettingsFile, settings_);
 
     //creat pointcloud
-     mpPointCloudMapping = make_shared<PointCloudMapping>(0, 0.01); //点云建图开关，精度
+     mpPointCloudMapping = make_shared<PointCloudMapping>(1, 0.01); //点云建图开关，精度
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
