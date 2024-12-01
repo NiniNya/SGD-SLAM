@@ -55,6 +55,7 @@ find_package(Pangolin REQUIRED)
 find_package(realsense2)
 find_package(Torch REQUIRED)
 find_package( PCL 1.7 REQUIRED )
+find_package( octomap REQUIRED )
 
 include_directories(
         ${PROJECT_SOURCE_DIR}
@@ -65,6 +66,7 @@ include_directories(
         ${Pangolin_INCLUDE_DIRS}
         ${TORCH_INCLUDE_DIRS}
 	${PCL_INCLUDE_DIRS}
+	${OCTOMAP_INCLUDE_DIRS}
 )
 
 add_definitions( ${PCL_DEFINITIONS} )
@@ -148,6 +150,7 @@ target_link_libraries(${PROJECT_NAME}
         -lboost_serialization
         -lcrypto
 	${PCL_LIBRARIES}
+	${OCTOMAP_LIBRARIES}
         )
 
 # If RealSense SDK is found the library is added and its examples compiled
@@ -293,4 +296,10 @@ if(realsense2_FOUND)
     target_link_libraries(recorder_realsense_T265 ${PROJECT_NAME})
 endif()
 
+# Build tools
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/tools)
+
+add_executable(pcd2octomap
+        tools/pcd2octomap.cc)
+target_link_libraries(pcd2octomap ${PROJECT_NAME})
 
