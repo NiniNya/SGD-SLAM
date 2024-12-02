@@ -85,6 +85,9 @@ public:
     std::vector<cv::Rect2i> mvStaticArea;
     std::vector<cv::Rect2i> mvMovableArea;
 
+    int nfeatures;
+    void UpdateFeatureNumber();
+
     void CheckMovingKeyPoints( const cv::Mat &imGray, std::vector<cv::KeyPoint>& mvKeys,cv::Mat mDescriptors,std::vector<cv::Point2f> T);
 
 protected:
@@ -97,7 +100,6 @@ protected:
     void ComputeKeyPointsOld(std::vector<std::vector<cv::KeyPoint> >& allKeypoints);
     std::vector<cv::Point> pattern;
 
-    int nfeatures;
     double scaleFactor;
     int nlevels;
     int iniThFAST;

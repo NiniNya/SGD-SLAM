@@ -251,6 +251,9 @@ protected:
     // Reset IMU biases and compute frame velocity
     void ResetFrameIMU();
 
+    // 更新需要的特征点数目
+    int FeatureNumberUpdate(const double area);
+
     bool mbMapUpdated;
 
     // Imu preintegration from last frame

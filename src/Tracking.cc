@@ -1546,6 +1546,11 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
     DynamicArea = mpDetector->mvDynamicArea;
     StaticArea = mpDetector->mvStaticArea;
 
+    // 自适应调节特征点数量
+    mpORBextractorLeft->nfeatures = FeatureNumberUpdate(mpDetector->aprox_area);
+    mpORBextractorLeft->UpdateFeatureNumber();
+    std::cout << "dynamic area ratio: " << mpDetector->aprox_area <<"    Feature number: " << mpORBextractorLeft->nfeatures << std::endl;
+
     {
         std::unique_lock<std::mutex> lock(mpViewer->mMutexPAFinsh);
         mpViewer->mmDetectMap = mpDetector->mmDetectMap; //绘图所有对象
@@ -1601,6 +1606,31 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 
     return mCurrentFrame.GetPose();
 }
+
+int Tracking::FeatureNumberUpdate(const double area)
+{
+
+	int keypoints = 1000;
+	
+    if(area == 0){
+		return keypoints;
+	}		
+	else if(area < 0.3){
+		return keypoints+(0.3*keypoints);
+	}
+	else if(area < 0.6){
+		return keypoints+(0.5*keypoints); 
+	}
+	else if(area < 0.9){
+		return keypoints+(0.7*keypoints);   
+	}
+	else if(area < 0.95){
+		return keypoints+(0.9*keypoints);
+	}
+	else{
+		return keypoints+(1.2*keypoints);
+	}
+}	
 
 
 Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename)
