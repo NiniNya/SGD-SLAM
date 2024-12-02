@@ -217,7 +217,7 @@ private:
     void ProcessMovingObject(const cv::Mat &imgray );
     // Sets for abnormal points
     
-    double limit_dis_epi =0.1; 
+    double limit_dis_epi =0.5; 
     double limit_of_check = 2120;
     int limit_edge_corner = 5;
     int flag_mov ;

@@ -1733,7 +1733,7 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
             DynaFac = DynaFac < 1? DynaFac : 1;
             //cout << DynaFac << ' ';
 
-            //M_P = DynaFac*(M_P); //移动概率
+            M_P = DynaFac*(M_P); //移动概率
             //cout << M_P << endl;
             return M_P;
         }
