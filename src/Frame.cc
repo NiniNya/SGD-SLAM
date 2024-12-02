@@ -1363,6 +1363,9 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
 	F2_nextpoint.clear();
 	T_M.clear();
 
+    // 暂存先验静态点
+    std::vector<cv::Point2f> F1_prepoint, F1_nextpoint;
+
 	// Detect dynamic target and ultimately optput the T matrix
 	//step 1 调用opencv 函数 计算Harris 角点，将结果保存在 prepoint 矩阵当中
     //cv::goodFeaturesToTrack()提取到的角点只能达到像素级别
@@ -1384,6 +1387,19 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
             int x1 = prepoint[i].x, y1 = prepoint[i].y;
             int x2 = nextpoint[i].x, y2 = nextpoint[i].y;
             
+
+            // 过滤掉在动态区域的点，不用于计算F矩阵
+            bool in_dynamic = false;
+            for (auto vit_area = mvDynamicArea.begin(); vit_area != mvDynamicArea.end(); vit_area++)
+            {
+                if (vit_area->contains(prepoint[i]) || vit_area->contains(nextpoint[i])) //rect.contains(Point(x, y));  //返回布尔变量，判断rect是否包含Point(x, y)点 
+                {
+                    in_dynamic = true;
+                    break;
+                }
+            }
+            // std::cout << "in_dynamic: " << in_dynamic << std::endl;
+            
             // 认为超过规定区域的,太靠近边缘。 跟踪的光流点的status 设置为0 ,一会儿会丢弃这些点
             if ((x1 < limit_edge_corner || x1 >= imgray.cols - limit_edge_corner || x2 < limit_edge_corner || x2 >= imgray.cols - limit_edge_corner
             || y1 < limit_edge_corner || y1 >= imgray.rows - limit_edge_corner || y2 < limit_edge_corner || y2 >= imgray.rows - limit_edge_corner))
@@ -1403,51 +1419,46 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
             // 好的光流点存入 F_prepoint F_nextpoint 两个数组当中
             if (state[i])
             {
-                // //将处于动态检测框中的点去除
-                // for (auto vit_area = mvDynamicArea.begin(); vit_area != mvDynamicArea.end(); vit_area++)
-                // {
-                //     if (vit_area->contains(cv::Point(x1, y1)) || vit_area->contains(cv::Point(x2, y2))) //rect.contains(Point(x, y));  //返回布尔变量，判断rect是否包含Point(x, y)点 
-                //     {
-                //         flag = 1;
-                //         break;
-                //     }
-                // }
-                // if (!flag) {
-                //     F_prepoint.push_back(prepoint[i]);
-                //     F_nextpoint.push_back(nextpoint[i]);
-                // }
                 F_prepoint.push_back(prepoint[i]);
                 F_nextpoint.push_back(nextpoint[i]);
+            }
+        
+            // 过滤掉在动态区域的点，不用于计算F矩阵
+            if (!in_dynamic && state[i]) {
+                F1_prepoint.push_back(prepoint[i]);
+                F1_nextpoint.push_back(nextpoint[i]);
             }
         }
     }
     // F-Matrix
-    //step 4 筛选之后的光流点计算 F 矩阵
+    //step 4 筛选之后的静态光流点计算 F 矩阵
     cv::Mat mask = cv::Mat(cv::Size(1, 300), CV_8UC1);
-    cv::Mat F = cv::findFundamentalMat(F_prepoint, F_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
+    // 可能出现静态点过少无法计算F的情况，会段错误
+    // std::cout << "F1_prepoint.size(): " << F1_prepoint.size() << std::endl;
+    cv::Mat F = cv::findFundamentalMat(F1_prepoint, F1_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
 
-    //step 5 目的是为了得到匹配程度更高的F2_prepoint,F2_nextpoint
-    for (int i = 0; i < mask.rows; i++)
-    {
-        if (mask.at<uchar>(i, 0) == 0);
-        else
-        {
-            // Circle(pre_frame, F_prepoint[i], 6, Scalar(255, 255, 0), 3);
-            double A = F.at<double>(0, 0)*F_prepoint[i].x + F.at<double>(0, 1)*F_prepoint[i].y + F.at<double>(0, 2);
-            double B = F.at<double>(1, 0)*F_prepoint[i].x + F.at<double>(1, 1)*F_prepoint[i].y + F.at<double>(1, 2);
-            double C = F.at<double>(2, 0)*F_prepoint[i].x + F.at<double>(2, 1)*F_prepoint[i].y + F.at<double>(2, 2);
-            double dd = fabs(A*F_nextpoint[i].x + B*F_nextpoint[i].y + C) / sqrt(A*A + B*B); //Epipolar constraints
-            if (dd <= 2)  //角点2到直线的距离小于0.1(米),则符合要求
-            {
-                F2_prepoint.push_back(F_prepoint[i]);   // 更加精确的符合要求的角点
-                F2_nextpoint.push_back(F_nextpoint[i]);
-            }
-        }
-    }
-
-    //并在最后将它们赋值给F_prepoint,F_nextpoint
-    F_prepoint = F2_prepoint;
-    F_nextpoint = F2_nextpoint;
+    // 原来DS-SLAM的写法，减少动态点对F计算的影响后感觉不加效果好点 
+    // //step 5 目的是为了得到匹配程度更高的F2_prepoint,F2_nextpoint
+    // for (int i = 0; i < mask.rows; i++)
+    // {
+    //     if (mask.at<uchar>(i, 0) == 0);
+    //     else
+    //     {
+    //         // Circle(pre_frame, F_prepoint[i], 6, Scalar(255, 255, 0), 3);
+    //         double A = F.at<double>(0, 0)*F_prepoint[i].x + F.at<double>(0, 1)*F_prepoint[i].y + F.at<double>(0, 2);
+    //         double B = F.at<double>(1, 0)*F_prepoint[i].x + F.at<double>(1, 1)*F_prepoint[i].y + F.at<double>(1, 2);
+    //         double C = F.at<double>(2, 0)*F_prepoint[i].x + F.at<double>(2, 1)*F_prepoint[i].y + F.at<double>(2, 2);
+    //         double dd = fabs(A*F_nextpoint[i].x + B*F_nextpoint[i].y + C) / sqrt(A*A + B*B); //Epipolar constraints
+    //         if (dd <= 2)  //角点2到直线的距离小于0.1(米),则符合要求
+    //         {
+    //             F2_prepoint.push_back(F_prepoint[i]);   // 更加精确的符合要求的角点
+    //             F2_nextpoint.push_back(F_nextpoint[i]);
+    //         }
+    //     }
+    // }
+    // //并在最后将它们赋值给F_prepoint,F_nextpoint
+    // F_prepoint = F2_prepoint;
+    // F_nextpoint = F2_nextpoint;
 
 
     //step6 对第3步LK光流法生成的 nextpoint ，利用极线约束进行验证，并且不满足约束的放入T_M 矩阵，如果不满足约束 那应该就是动态点了
