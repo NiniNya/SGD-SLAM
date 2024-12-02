@@ -59,6 +59,8 @@ bool YoloDetection::Detect()
     torch::Tensor preds = mModule.forward({imgTensor}).toTuple()->elements()[0].toTensor();
     //后处理
     std::vector<torch::Tensor> dets = YoloDetection::non_max_suppression(preds, 0.4, 0.5);
+
+    aprox_area = 0;
     if (dets.size() > 0)
     {
         // Visualize result
@@ -91,7 +93,8 @@ bool YoloDetection::Detect()
                 // cv::bitwise_or(mask, mask1, mask);   //将掩码叠加
                 // mRGB.copyTo(foreground, mask1); // 复制前景图像
                 // cv::imshow("Foreground",foreground);
-	        
+
+                aprox_area = aprox_area + ((right - left) *( bottom - top))/fig_area;
             }
 
             if (count(mvStaticNames.begin(), mvStaticNames.end(), mClassnames[classID])) //识别出的对象是否是静态对象

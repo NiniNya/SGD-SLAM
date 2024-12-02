@@ -41,6 +41,9 @@ public:
     vector<cv::Rect2i> mvMovableArea;
     // cv::Mat mask;  
     map<string, vector<cv::Rect2i>> mmDetectMap;
+    
+	double aprox_area;	
+	double fig_area = 640*480;
 
 };
 
