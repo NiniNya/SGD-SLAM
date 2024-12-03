@@ -1435,7 +1435,11 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
     cv::Mat mask = cv::Mat(cv::Size(1, 300), CV_8UC1);
     // 可能出现静态点过少无法计算F的情况，会段错误
     // std::cout << "F1_prepoint.size(): " << F1_prepoint.size() << std::endl;
-    cv::Mat F = cv::findFundamentalMat(F1_prepoint, F1_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
+    cv::Mat F;
+    if (F1_prepoint.size() < 8) {
+        std::cout << "F1_prepoint.size() < 8" << std::endl;
+        F = cv::findFundamentalMat(F_prepoint, F_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
+    } else F = cv::findFundamentalMat(F1_prepoint, F1_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
 
     // 原来DS-SLAM的写法，减少动态点对F计算的影响后感觉不加效果好点 
     // //step 5 目的是为了得到匹配程度更高的F2_prepoint,F2_nextpoint
