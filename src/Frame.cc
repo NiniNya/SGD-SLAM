@@ -237,87 +237,87 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
     // Calculate the dynamic abnormal points and output the T matrix
     // **使用几何法计算动态点**
-    cv::Mat  imGrayT = imGray;
-    if(imGrayPre.data)
-    {
-        //（几何法）使用光流进行运动一致性检测，找到异常点并保存
+    // cv::Mat  imGrayT = imGray;
+    // if(imGrayPre.data)
+    // {
+    //     //（几何法）使用光流进行运动一致性检测，找到异常点并保存
 
-        //std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+    //     //std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 
-        ProcessMovingObject(imGray);
+    //     ProcessMovingObject(imGray);
 
-        // std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
-        // double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
-        // cout << "segment time  =" << ttrack*1000 << endl;
+    //     // std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+    //     // double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
+    //     // cout << "segment time  =" << ttrack*1000 << endl;
 
-        std::swap(imGrayPre, imGrayT);
-    }
-    else
-    {
-        std::swap(imGrayPre, imGrayT);
-    }
-    // **使用几何法计算动态点**
-
-    //  **根据判断结果移除动态点**
-    // for (int k=0; k<mvKeys.size(); ++k){
-    //     if (IsInDynamic(k) == true)
-    //     //if ((IsInDynamic(k) == true && IsInStatic(k) == false && IsNotMoving(k) == false) )
-    //     //if (IsInDynamic(k) == true && IsInStatic(k) == false)
-    //    // if (IsInDynamic(k) == true )
-    //         { //在动态物体框内,但不在静态物体框内
-    //             vbInDynamic_mvKeys.push_back(true);
-    //             mvKeys[k] = cv::KeyPoint(-1,-1,-1);
-    //         }
-    //         else{
-    //             vbInDynamic_mvKeys.push_back(false);
-    //         }
+    //     std::swap(imGrayPre, imGrayT);
     // }
-    //  **根据判断结果移除动态点**
+    // else
+    // {
+    //     std::swap(imGrayPre, imGrayT);
+    // }
+    // // **使用几何法计算动态点**
 
-    //  **动态区域信息获取**
-    TMnum.clear();
-    KPinfo.clear();
-    for (int n = 0; n < mvDynamicArea.size(); n ++){
-        int myTM = get_TMnum(mvDynamicArea[n]); //异常点个数
-        std::pair<int, float> myKP = get_KPnum(mvDynamicArea[n], imDepth); //特征点个数和平均深度
+    // //  **根据判断结果移除动态点**
+    // // for (int k=0; k<mvKeys.size(); ++k){
+    // //     if (IsInDynamic(k) == true)
+    // //     //if ((IsInDynamic(k) == true && IsInStatic(k) == false && IsNotMoving(k) == false) )
+    // //     //if (IsInDynamic(k) == true && IsInStatic(k) == false)
+    // //    // if (IsInDynamic(k) == true )
+    // //         { //在动态物体框内,但不在静态物体框内
+    // //             vbInDynamic_mvKeys.push_back(true);
+    // //             mvKeys[k] = cv::KeyPoint(-1,-1,-1);
+    // //         }
+    // //         else{
+    // //             vbInDynamic_mvKeys.push_back(false);
+    // //         }
+    // // }
+    // //  **根据判断结果移除动态点**
 
-        TMnum.push_back(myTM);
-        KPinfo.push_back(myKP);
-    }
+    // //  **动态区域信息获取**
+    // TMnum.clear();
+    // KPinfo.clear();
+    // for (int n = 0; n < mvDynamicArea.size(); n ++){
+    //     int myTM = get_TMnum(mvDynamicArea[n]); //异常点个数
+    //     std::pair<int, float> myKP = get_KPnum(mvDynamicArea[n], imDepth); //特征点个数和平均深度
 
-    //  **可动区域信息获取**
-    TMnum_.clear();
-    KPinfo_.clear();
-    for (int n = 0; n < mvMovableArea.size(); n ++){
-        int myTM = get_TMnum(mvMovableArea[n]); //异常点个数
-        std::pair<int, float> myKP = get_KPnum(mvMovableArea[n], imDepth); //特征点个数和平均深度
+    //     TMnum.push_back(myTM);
+    //     KPinfo.push_back(myKP);
+    // }
 
-        TMnum_.push_back(myTM);
-        KPinfo_.push_back(myKP);
-    }
+    // //  **可动区域信息获取**
+    // TMnum_.clear();
+    // KPinfo_.clear();
+    // for (int n = 0; n < mvMovableArea.size(); n ++){
+    //     int myTM = get_TMnum(mvMovableArea[n]); //异常点个数
+    //     std::pair<int, float> myKP = get_KPnum(mvMovableArea[n], imDepth); //特征点个数和平均深度
 
-    //  **更新移动概率**
-    movingPro.clear();
-    for (int k=0; k<mvKeys.size(); k++){ 
+    //     TMnum_.push_back(myTM);
+    //     KPinfo_.push_back(myKP);
+    // }
 
-        float movingPro_ = 0;
+    // //  **更新移动概率**
+    // movingPro.clear();
+    // for (int k=0; k<mvKeys.size(); k++){ 
 
-        //movingPro_ = movingPro_ + do_InDynamic(k, imDepth) +  do_InMoving(k, imDepth) + do_NotMoving(k) +do_InStatic(k);  //分级
-        movingPro_ = movingPro_ + do_InDynamic(k, imDepth, TMnum, KPinfo)+ do_InMoving(k, imDepth, TMnum_, KPinfo_);  //深度分割
-        //movingPro_ = movingPro_ + do_InDynamic(k, imDepth, TMnum, KPinfo);  //深度分割
-        //cout << "before" << movingPro_<< endl;
+    //     float movingPro_ = 0;
 
-        if (DynamicFlag == true) {
-            movingPro_=  movingPro_ + do_InTM(k);
-            //cout << "after" << movingPro_<< endl;
-        }
+    //     //movingPro_ = movingPro_ + do_InDynamic(k, imDepth) +  do_InMoving(k, imDepth) + do_NotMoving(k) +do_InStatic(k);  //分级
+    //     movingPro_ = movingPro_ + do_InDynamic(k, imDepth, TMnum, KPinfo)+ do_InMoving(k, imDepth, TMnum_, KPinfo_);  //深度分割
+    //     //movingPro_ = movingPro_ + do_InDynamic(k, imDepth, TMnum, KPinfo);  //深度分割
+    //     //cout << "before" << movingPro_<< endl;
 
-        if (movingPro_ < 0) movingPro_ = 0;
-        if (movingPro_ > 1) movingPro_ = 1;
-        if (movingPro_ > 0.9)  mvKeys[k] = cv::KeyPoint(-1,-1,-1); //去除高于阈值的点
-        movingPro.push_back(movingPro_);
+    //     if (DynamicFlag == true) {
+    //         movingPro_=  movingPro_ + do_InTM(k);
+    //         //cout << "after" << movingPro_<< endl;
+    //     }
 
-    }
+    //     if (movingPro_ < 0) movingPro_ = 0;
+    //     if (movingPro_ > 1) movingPro_ = 1;
+    //     if (movingPro_ > 0.9)  mvKeys[k] = cv::KeyPoint(-1,-1,-1); //去除高于阈值的点
+    //     movingPro.push_back(movingPro_);
+
+    // }
     //  **更新移动概率**
 
     //mpORBextractorLeft->CheckMovingKeyPoints(imGray,mvKeys, mDescriptors, T_M);

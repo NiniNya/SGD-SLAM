@@ -1527,36 +1527,36 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
     mImGray = imRGB;
     cv::Mat imDepth = imD;
 
-    // Yolo
-    cv::Mat InputImage;
-    InputImage = imRGB.clone();
+    // // Yolo
+    // cv::Mat InputImage;
+    // InputImage = imRGB.clone();
 
     //std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 
-    mpDetector->GetImage(InputImage);
-    mpDetector->Detect();
+    // mpDetector->GetImage(InputImage);
+    // mpDetector->Detect();
     
-    // std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
-    // double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
-    // cout << "segment time  =" << ttrack*1000 << endl;
+    // // std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+    // // double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
+    // // cout << "segment time  =" << ttrack*1000 << endl;
 
-    mpORBextractorLeft->mvDynamicArea = mpDetector->mvDynamicArea;
-    mpORBextractorLeft->mvStaticArea = mpDetector->mvStaticArea;
-    mpORBextractorLeft->mvMovableArea = mpDetector->mvMovableArea;
-    DynamicArea = mpDetector->mvDynamicArea;
-    StaticArea = mpDetector->mvStaticArea;
+    // mpORBextractorLeft->mvDynamicArea = mpDetector->mvDynamicArea;
+    // mpORBextractorLeft->mvStaticArea = mpDetector->mvStaticArea;
+    // mpORBextractorLeft->mvMovableArea = mpDetector->mvMovableArea;
+    // DynamicArea = mpDetector->mvDynamicArea;
+    // StaticArea = mpDetector->mvStaticArea;
 
-    {
-        std::unique_lock<std::mutex> lock(mpViewer->mMutexPAFinsh);
-        mpViewer->mmDetectMap = mpDetector->mmDetectMap; //绘图所有对象
-        mpViewer->mvDynamicArea = mpDetector->mvDynamicArea;
-        mpViewer->mvStaticArea = mpDetector->mvStaticArea;
-        mpViewer->mvMovableArea = mpDetector->mvMovableArea;
-    }
-    mpDetector->mvDynamicArea.clear();
-    mpDetector->mvStaticArea.clear();
-    mpDetector->mmDetectMap.clear();
-    mpDetector->mvMovableArea.clear();
+    // {
+    //     std::unique_lock<std::mutex> lock(mpViewer->mMutexPAFinsh);
+    //     mpViewer->mmDetectMap = mpDetector->mmDetectMap; //绘图所有对象
+    //     mpViewer->mvDynamicArea = mpDetector->mvDynamicArea;
+    //     mpViewer->mvStaticArea = mpDetector->mvStaticArea;
+    //     mpViewer->mvMovableArea = mpDetector->mvMovableArea;
+    // }
+    // mpDetector->mvDynamicArea.clear();
+    // mpDetector->mvStaticArea.clear();
+    // mpDetector->mmDetectMap.clear();
+    // mpDetector->mvMovableArea.clear();
 
     if(mImGray.channels()==3)
     {
