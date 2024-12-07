@@ -99,6 +99,7 @@ protected:
 
     void ComputeKeyPointsOld(std::vector<std::vector<cv::KeyPoint> >& allKeypoints);
     std::vector<cv::Point> pattern;
+    int DynamicMinThFAST(const cv::Mat& image, int iniX, int iniY, int maxX, int maxY);
 
     double scaleFactor;
     int nlevels;
